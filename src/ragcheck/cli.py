@@ -36,6 +36,7 @@ def ingest(source: Path, output: Path) -> None:
     documents = load_corpus(source)
     if not documents:
         raise click.ClickException(f"no supported documents found under {source}")
+    _ensure_parent(output)
     count = save_corpus(documents, output)
     click.echo(f"wrote {count} documents to {output}")
 
@@ -49,6 +50,7 @@ def generate(corpus: Path, output: Path, max_leakage: float) -> None:
     items = generate_evalset(read_corpus(corpus), max_leakage=max_leakage)
     if not items:
         raise click.ClickException("no eval items could be generated from this corpus")
+    _ensure_parent(output)
     count = save_evalset(items, output)
     tiers = Counter(item.difficulty for item in items)
     breakdown = ", ".join(f"{tier}={tiers.get(tier, 0)}" for tier in ("easy", "medium", "hard"))
@@ -87,6 +89,7 @@ def run(
     result = evaluate(items, retriever, documents, k=k, retriever_name=name)
     if not per_item:
         result = dataclasses.replace(result, per_item=[])
+    _ensure_parent(output)
     save_results(result, output)
     for metric, value in result.summary.items():
         click.echo(f"{metric}: {value:.3f}")
@@ -104,9 +107,11 @@ def report(results: Path, md_path: Path | None, badge_path: Path | None) -> None
         click.echo(render_markdown(result), nl=False)
         return
     if md_path is not None:
+        _ensure_parent(md_path)
         md_path.write_text(render_markdown(result), encoding="utf-8")
         click.echo(f"wrote {md_path}")
     if badge_path is not None:
+        _ensure_parent(badge_path)
         badge_path.write_text(headline_badge(result), encoding="utf-8")
         click.echo(f"wrote {badge_path}")
 
@@ -135,6 +140,10 @@ def gate(results: Path, baseline: Path, max_drop: float, metrics: tuple[str, ...
     click.echo(outcome.render(), nl=False)
     if not outcome.passed:
         sys.exit(1)
+
+
+def _ensure_parent(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
 
 
 def _load_adapter(spec: str, documents: Sequence[Document]) -> tuple[Retriever, str]:
