@@ -90,6 +90,13 @@ See [`.github/workflows/dogfood.yml`](.github/workflows/dogfood.yml) — this re
 3. **Bring your own stack.** A tiny protocol, no framework lock-in, no heavy core deps.
 4. **Everything is a file.** JSONL in, JSON out — diffable, committable, CI-native.
 
+## Why trust the numbers?
+
+The metrics are golden-tested against hand-computed values. The repo dogfoods itself in
+CI — which already caught a real bug (overlapping chunks double-counting a gold span
+pushed nDCG above 1.0; now impossible by construction and regression-tested). The
+harness is validated against published BEIR results.
+
 ## Benchmarks
 
 The harness is validated against [BEIR](https://github.com/beir-cellar/beir) datasets
