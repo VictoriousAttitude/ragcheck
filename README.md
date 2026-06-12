@@ -100,17 +100,22 @@ harness is validated against published BEIR results.
 ## Benchmarks
 
 The harness is validated against [BEIR](https://github.com/beir-cellar/beir) datasets
-(document-level relevance mapped to whole-document gold spans). SciFact, 5183 documents,
-300 test queries, reference BM25 retriever:
+(document-level relevance mapped to whole-document gold spans). Reference BM25
+retriever, k=10:
 
-| retriever | chunk size | hit_rate@10 | recall@10 | ndcg@10 | mrr |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| bm25 | 300 | 0.753 | 0.729 | 0.590 | 0.556 |
-| bm25 | 800 | 0.767 | 0.744 | 0.629 | 0.600 |
+| dataset | docs | queries | chunk size | hit_rate@10 | recall@10 | ndcg@10 | mrr |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| scifact | 5183 | 300 | 300 | 0.753 | 0.729 | 0.590 | 0.556 |
+| scifact | 5183 | 300 | 800 | 0.767 | 0.744 | 0.629 | 0.600 |
+| nfcorpus | 3633 | 323 | 300 | 0.644 | 0.131 | 0.252 | 0.475 |
+| nfcorpus | 3633 | 323 | 800 | 0.656 | 0.138 | 0.259 | 0.470 |
+| fiqa | 57600 | 648 | 300 | 0.384 | 0.228 | 0.180 | 0.235 |
+| fiqa | 57600 | 648 | 800 | 0.429 | 0.262 | 0.210 | 0.268 |
 
-Chunk size alone moves nDCG@10 by 4 points on the same corpus and retriever — exactly
-the kind of difference these evals exist to catch. Reproduce with
-[`benchmarks/beir_runner.py`](benchmarks/beir_runner.py).
+Chunk size alone moves nDCG@10 by 3–4 points on the same corpus and retriever — exactly
+the kind of difference these evals exist to catch. (NFCorpus recall@10 is structurally
+low: its queries average dozens of relevant documents, more than fit in the top 10.)
+Reproduce with [`benchmarks/beir_runner.py`](benchmarks/beir_runner.py).
 
 ## Status
 

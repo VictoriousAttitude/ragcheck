@@ -55,6 +55,8 @@ def load_beir(path: Path, max_queries: int) -> tuple[list[Document], list[EvalIt
         for line in fh:
             entry = json.loads(line)
             text = "\n\n".join(part for part in (entry.get("title", ""), entry["text"]) if part)
+            if not text.strip():  # fiqa ships a handful of empty passages
+                continue
             doc = Document.from_text(path=str(entry["_id"]), text=text)
             documents.append(doc)
             by_beir_id[str(entry["_id"])] = doc
