@@ -1,0 +1,30 @@
+name: dogfood
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e .
+      - name: Ingest example corpus
+        run: ragcheck ingest examples/acme-docs -o corpus.jsonl
+      - name: Generate evalset
+        run: ragcheck generate corpus.jsonl -o evalset.jsonl
+      - name: Evaluate retrieval
+        run: >
+          ragcheck run evalset.jsonl --corpus corpus.jsonl
+          --max-chars 400 --overlap-chars 60 --no-per-item -o results.json
+      - name: Show diff against baseline
+        run: ragcheck diff examples/baseline.json results.json
+      - name: Gate on regression
+        run: ragcheck gate results.json --baseline examples/baseline.json --max-drop 0.02

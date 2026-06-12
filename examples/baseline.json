@@ -1,0 +1,41 @@
+{
+  "config": {
+    "ragcheck_version": "0.1.0",
+    "retriever": "bm25(max_chars=400,overlap_chars=60)",
+    "k": 5,
+    "n_items": 31,
+    "evalset_fingerprint": "25136d64e03b83c9"
+  },
+  "summary": {
+    "hit_rate@1": 0.967741935483871,
+    "recall@1": 0.967741935483871,
+    "ndcg@1": 0.967741935483871,
+    "hit_rate@5": 1.0,
+    "recall@5": 1.0,
+    "ndcg@5": 0.9880945081797244,
+    "mrr": 0.9838709677419355
+  },
+  "by_difficulty": {
+    "easy": {
+      "n": 11.0,
+      "hit_rate@1": 0.9090909090909091,
+      "recall@1": 0.9090909090909091,
+      "ndcg@1": 0.9090909090909091,
+      "hit_rate@5": 1.0,
+      "recall@5": 1.0,
+      "ndcg@5": 0.966448159415587,
+      "mrr": 0.9545454545454546
+    },
+    "hard": {
+      "n": 20.0,
+      "hit_rate@1": 1.0,
+      "recall@1": 1.0,
+      "ndcg@1": 1.0,
+      "hit_rate@5": 1.0,
+      "recall@5": 1.0,
+      "ndcg@5": 1.0,
+      "mrr": 1.0
+    }
+  },
+  "per_item": []
+}
