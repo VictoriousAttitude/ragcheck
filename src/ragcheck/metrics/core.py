@@ -71,15 +71,23 @@ def mrr(judgments: Sequence[QueryJudgment], k: int | None = None) -> float:
 
 
 def ndcg_at_k(judgments: Sequence[QueryJudgment], k: int) -> float:
-    """Mean normalized discounted cumulative gain at *k* with binary gains."""
+    """Mean normalized discounted cumulative gain at *k* with binary novel gains.
+
+    A rank gains only when it covers at least one gold span that no earlier
+    rank covered. Without the novelty requirement, overlapping chunks hitting
+    the same gold span repeatedly would push nDCG above 1.
+    """
     _validate(judgments, k)
     if not judgments:
         return 0.0
     total = 0.0
     for j in judgments:
-        dcg = sum(
-            1.0 / math.log2(rank + 1) for rank, hit in enumerate(j.relevant()[:k], start=1) if hit
-        )
+        dcg = 0.0
+        seen: set[int] = set()
+        for rank, covered in enumerate(j.covered[:k], start=1):
+            if covered - seen:
+                dcg += 1.0 / math.log2(rank + 1)
+                seen |= covered
         ideal_hits = min(j.n_gold, k)
         idcg = sum(1.0 / math.log2(rank + 1) for rank in range(1, ideal_hits + 1))
         total += dcg / idcg

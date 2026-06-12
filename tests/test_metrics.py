@@ -51,6 +51,15 @@ def test_ndcg() -> None:
     assert ndcg_at_k([perfect], 1) == 1.0
 
 
+def test_ndcg_duplicate_coverage_does_not_inflate() -> None:
+    # Overlapping chunks hit the same single gold span at every rank.
+    duplicated = QueryJudgment(n_gold=1, covered=(frozenset({0}), frozenset({0}), frozenset({0})))
+    assert ndcg_at_k([duplicated], 3) == 1.0
+    # First coverage at rank 2, duplicated at rank 3: only rank 2 gains.
+    late = QueryJudgment(n_gold=1, covered=(frozenset(), frozenset({0}), frozenset({0})))
+    assert ndcg_at_k([late], 3) == pytest.approx(0.6309297535714575)
+
+
 def test_empty_inputs_and_bad_k() -> None:
     assert hit_rate_at_k([], 5) == 0.0
     assert recall_at_k([], 5) == 0.0
