@@ -7,19 +7,13 @@ dependency-free and the scoring is fully transparent.
 from __future__ import annotations
 
 import math
-import re
 from collections import Counter
 from collections.abc import Iterable
 
 from ragcheck.corpus.models import Document
 from ragcheck.retrievers.base import RetrievedChunk
 from ragcheck.retrievers.chunking import Chunk, chunk_document
-
-_WORD = re.compile(r"\w+")
-
-
-def tokenize(text: str) -> list[str]:
-    return _WORD.findall(text.casefold())
+from ragcheck.text import tokenize
 
 
 class BM25Retriever:
