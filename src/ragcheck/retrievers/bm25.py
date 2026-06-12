@@ -35,29 +35,40 @@ class BM25Retriever:
             for doc in documents
             for chunk in chunk_document(doc, max_chars=max_chars, overlap_chars=overlap_chars)
         ]
-        self._term_freqs: list[Counter[str]] = [Counter(tokenize(c.text)) for c in self._chunks]
-        self._lengths = [sum(tf.values()) for tf in self._term_freqs]
-        self._avg_length = (sum(self._lengths) / len(self._lengths)) if self._lengths else 0.0
-        doc_freq: Counter[str] = Counter()
-        for tf in self._term_freqs:
-            doc_freq.update(tf.keys())
+        term_freqs = [Counter(tokenize(c.text)) for c in self._chunks]
+        lengths = [sum(tf.values()) for tf in term_freqs]
+        avg_length = (sum(lengths) / len(lengths)) if lengths else 0.0
+        # Per-chunk length normalization, precomputed once.
+        self._norms = [
+            k1 * (1.0 - b + b * length / avg_length) if avg_length else 0.0 for length in lengths
+        ]
+        # Inverted index: term -> [(chunk index, term frequency)]. Scoring a query
+        # touches only chunks that share a term with it instead of the whole corpus.
+        self._postings: dict[str, list[tuple[int, int]]] = {}
+        for index, tf in enumerate(term_freqs):
+            for term, frequency in tf.items():
+                self._postings.setdefault(term, []).append((index, frequency))
         n = len(self._chunks)
         self._idf = {
-            term: math.log((n - df + 0.5) / (df + 0.5) + 1.0) for term, df in doc_freq.items()
+            term: math.log((n - len(postings) + 0.5) / (len(postings) + 0.5) + 1.0)
+            for term, postings in self._postings.items()
         }
 
     def retrieve(self, query: str, k: int) -> list[RetrievedChunk]:
         if k < 1:
             raise ValueError(f"k must be >= 1, got {k}")
-        query_terms = tokenize(query)
-        scored: list[tuple[float, int]] = []
-        for index, tf in enumerate(self._term_freqs):
-            score = self._score(query_terms, tf, self._lengths[index])
-            if score > 0.0:
-                scored.append((score, index))
-        scored.sort(key=lambda pair: (-pair[0], pair[1]))
+        scores: dict[int, float] = {}
+        for term in tokenize(query):
+            postings = self._postings.get(term)
+            if postings is None:
+                continue
+            idf = self._idf[term]
+            for index, frequency in postings:
+                gain = idf * frequency * (self._k1 + 1.0) / (frequency + self._norms[index])
+                scores[index] = scores.get(index, 0.0) + gain
+        scored = sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))
         results = []
-        for score, index in scored[:k]:
+        for index, score in scored[:k]:
             chunk = self._chunks[index]
             results.append(
                 RetrievedChunk(
@@ -69,13 +80,3 @@ class BM25Retriever:
                 )
             )
         return results
-
-    def _score(self, query_terms: list[str], tf: Counter[str], length: int) -> float:
-        score = 0.0
-        norm = self._k1 * (1.0 - self._b + self._b * length / self._avg_length)
-        for term in query_terms:
-            frequency = tf.get(term, 0)
-            if frequency == 0:
-                continue
-            score += self._idf[term] * frequency * (self._k1 + 1.0) / (frequency + norm)
-        return score
