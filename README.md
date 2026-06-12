@@ -90,10 +90,25 @@ See [`.github/workflows/dogfood.yml`](.github/workflows/dogfood.yml) — this re
 3. **Bring your own stack.** A tiny protocol, no framework lock-in, no heavy core deps.
 4. **Everything is a file.** JSONL in, JSON out — diffable, committable, CI-native.
 
+## Benchmarks
+
+The harness is validated against [BEIR](https://github.com/beir-cellar/beir) datasets
+(document-level relevance mapped to whole-document gold spans). SciFact, 5183 documents,
+300 test queries, reference BM25 retriever:
+
+| retriever | chunk size | hit_rate@10 | recall@10 | ndcg@10 | mrr |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| bm25 | 300 | 0.753 | 0.729 | 0.590 | 0.556 |
+| bm25 | 800 | 0.767 | 0.744 | 0.629 | 0.600 |
+
+Chunk size alone moves nDCG@10 by 4 points on the same corpus and retriever — exactly
+the kind of difference these evals exist to catch. Reproduce with
+[`benchmarks/beir_runner.py`](benchmarks/beir_runner.py).
+
 ## Status
 
-Early development: the CLI shape is settling, PDF loading and a dense reference
-retriever are in progress, and BEIR benchmark numbers are coming next.
+Early development: CLI shape is settling. Next: PDF loading, an optional LLM-assisted
+question generator, more BEIR datasets, and a PyPI release.
 
 ## License
 

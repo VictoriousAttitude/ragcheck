@@ -16,6 +16,9 @@ venv/
 .coverage
 htmlcov/
 
+# Benchmark datasets (downloaded on demand)
+benchmarks/data/
+
 # Editors
 .idea/
 .vscode/
