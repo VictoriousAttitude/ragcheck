@@ -18,7 +18,7 @@ from ragcheck.dataset import generate_evalset, read_evalset, save_evalset
 from ragcheck.dataset.leakage import DEFAULT_MAX_LEAKAGE
 from ragcheck.gate import DEFAULT_MAX_DROP, check_gate
 from ragcheck.report import headline_badge, render_diff, render_markdown
-from ragcheck.retrievers import BM25Retriever, Retriever
+from ragcheck.retrievers import BM25Retriever, DenseRetriever, Retriever
 from ragcheck.runner import evaluate, read_results, save_results
 
 
@@ -60,7 +60,7 @@ def generate(corpus: Path, output: Path, max_leakage: float) -> None:
 @main.command()
 @click.argument("evalset", type=click.Path(exists=True, path_type=Path))
 @click.option("--corpus", type=click.Path(exists=True, path_type=Path), required=True)
-@click.option("--retriever", "retriever_name", type=click.Choice(["bm25"]), default="bm25")
+@click.option("--retriever", "retriever_name", type=click.Choice(["bm25", "dense"]), default="bm25")
 @click.option("--adapter", default=None, help="Custom retriever as 'module.path:attribute'.")
 @click.option("-k", type=int, default=5, show_default=True)
 @click.option("--max-chars", type=int, default=800, show_default=True, help="bm25 chunk size.")
@@ -81,11 +81,18 @@ def run(
     """Evaluate a retriever against EVALSET and write results."""
     documents = read_corpus(corpus)
     items = read_evalset(evalset)
+    retriever: Retriever
     if adapter is not None:
         retriever, name = _load_adapter(adapter, documents)
+    elif retriever_name == "dense":
+        try:
+            retriever = DenseRetriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
+        except RuntimeError as exc:
+            raise click.ClickException(str(exc)) from exc
+        name = f"dense(max_chars={max_chars},overlap_chars={overlap_chars})"
     else:
         retriever = BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
-        name = f"{retriever_name}(max_chars={max_chars},overlap_chars={overlap_chars})"
+        name = f"bm25(max_chars={max_chars},overlap_chars={overlap_chars})"
     result = evaluate(items, retriever, documents, k=k, retriever_name=name)
     if not per_item:
         result = dataclasses.replace(result, per_item=[])

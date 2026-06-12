@@ -28,6 +28,9 @@ dependencies = [
 ragcheck = "ragcheck.cli:main"
 
 [project.optional-dependencies]
+dense = [
+    "sentence-transformers>=3.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
@@ -48,6 +51,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 strict = true
 packages = ["ragcheck"]
 mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = "sentence_transformers.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
