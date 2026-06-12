@@ -4,7 +4,7 @@
     "retriever": "bm25(max_chars=400,overlap_chars=60)",
     "k": 5,
     "n_items": 31,
-    "evalset_fingerprint": "25136d64e03b83c9"
+    "evalset_fingerprint": "bb2fde2de7f6db28"
   },
   "summary": {
     "hit_rate@1": 0.967741935483871,
@@ -26,8 +26,18 @@
       "ndcg@5": 0.966448159415587,
       "mrr": 0.9545454545454546
     },
+    "medium": {
+      "n": 7.0,
+      "hit_rate@1": 1.0,
+      "recall@1": 1.0,
+      "ndcg@1": 1.0,
+      "hit_rate@5": 1.0,
+      "recall@5": 1.0,
+      "ndcg@5": 1.0,
+      "mrr": 1.0
+    },
     "hard": {
-      "n": 20.0,
+      "n": 13.0,
       "hit_rate@1": 1.0,
       "recall@1": 1.0,
       "ndcg@1": 1.0,

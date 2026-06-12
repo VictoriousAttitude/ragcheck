@@ -77,7 +77,12 @@ def _definition_candidates(doc: Document) -> Iterator[tuple[str, Span, str]]:
 
 
 def _heading_candidates(doc: Document) -> Iterator[tuple[str, Span, str]]:
-    """Each heading with a real first paragraph becomes a section question."""
+    """Each heading with a real first paragraph becomes a section question.
+
+    The gold span covers the heading *and* the paragraph: the title is part of
+    the answer's context and is the query's natural lexical anchor, so leaving
+    it out would mislabel every section question as hard.
+    """
     headings = list(_HEADING.finditer(doc.text))
     for index, match in enumerate(headings):
         title = re.sub(r"[`*#_]", "", match.group("title")).strip()
@@ -89,7 +94,7 @@ def _heading_candidates(doc: Document) -> Iterator[tuple[str, Span, str]]:
         if paragraph is None:
             continue
         query = f"What should I know about {title}?"
-        yield query, Span(doc.doc_id, *paragraph), "template:section"
+        yield query, Span(doc.doc_id, match.start(), paragraph[1]), "template:section"
 
 
 def _first_paragraph(text: str, start: int, end: int) -> tuple[int, int] | None:

@@ -32,12 +32,24 @@ def test_definition_template_extracts_question_and_span() -> None:
         assert DOC.text[span.start : span.end].rstrip().endswith((".", "!", "?"))
 
 
-def test_section_template_targets_first_paragraph() -> None:
+def test_section_template_spans_heading_and_first_paragraph() -> None:
     items = generate_evalset([DOC])
     sections = {i.query: i for i in items if i.gen_method == "template:section"}
     item = sections["What should I know about Deployment?"]
     span = item.answers[0]
-    assert DOC.text[span.start : span.end].startswith("Releases ship")
+    text = DOC.text[span.start : span.end]
+    assert text.startswith("## Deployment")
+    assert text.endswith("stage proceeds.")
+
+
+def test_multiword_section_title_anchors_to_medium() -> None:
+    doc = Document.from_text(
+        "ops.md",
+        "## Freeze windows\n\nDeploys pause during the holiday change freeze each year.\n",
+    )
+    items = generate_evalset([doc])
+    item = next(i for i in items if i.gen_method == "template:section")
+    assert item.difficulty == "medium"
 
 
 def test_all_items_have_difficulty_and_metadata() -> None:
