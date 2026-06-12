@@ -20,7 +20,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Quality Assurance",
 ]
-dependencies = []
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+ragcheck = "ragcheck.cli:main"
 
 [project.optional-dependencies]
 dev = [
