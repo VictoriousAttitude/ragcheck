@@ -1,4 +1,4 @@
-"""Command-line interface: ingest, generate, run, compare, report, diff, gate."""
+"""Command-line interface: ingest, generate, run, compare, explain, report, diff, gate."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from ragcheck.report import (
     rank_comparison,
     render_comparison,
     render_diff,
+    render_failures,
     render_markdown,
 )
 from ragcheck.retrievers import (
@@ -39,7 +40,7 @@ from ragcheck.retrievers import (
     RerankRetriever,
     Retriever,
 )
-from ragcheck.runner import evaluate, read_results, save_results
+from ragcheck.runner import evaluate, explain_failures, read_results, save_results
 
 
 @click.group()
@@ -205,6 +206,43 @@ def compare(
         output.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         click.echo(f"wrote {output}", err=True)
     click.echo(render_comparison(ranked, sort_metric), nl=False)
+
+
+@main.command()
+@click.argument("evalset", type=click.Path(exists=True, path_type=Path))
+@click.option("--corpus", type=click.Path(exists=True, path_type=Path), required=True)
+@click.option(
+    "--retriever",
+    "retriever_name",
+    type=click.Choice(["bm25", "dense", "hybrid", "rerank"]),
+    default="bm25",
+)
+@click.option("--adapter", default=None, help="Custom retriever as 'module.path:attribute'.")
+@click.option("-k", type=int, default=5, show_default=True)
+@click.option("--max-chars", type=int, default=800, show_default=True, help="bm25 chunk size.")
+@click.option("--overlap-chars", type=int, default=100, show_default=True, help="bm25 overlap.")
+@click.option("--worst", type=int, default=5, show_default=True, help="How many failures to show.")
+def explain(
+    evalset: Path,
+    corpus: Path,
+    retriever_name: str,
+    adapter: str | None,
+    k: int,
+    max_chars: int,
+    overlap_chars: int,
+    worst: int,
+) -> None:
+    """Show the worst-scoring queries: the gold span vs. what the retriever returned."""
+    documents = read_corpus(corpus)
+    items = read_evalset(evalset)
+    if adapter is not None:
+        retriever, _ = _load_adapter(adapter, documents)
+    else:
+        retriever, _ = _build_reference_retriever(
+            retriever_name, documents, max_chars, overlap_chars
+        )
+    cases = explain_failures(items, retriever, documents, k=k, limit=worst)
+    click.echo(render_failures(cases, k=k, total=len(items)), nl=False)
 
 
 @main.command()

@@ -23,7 +23,14 @@ from ragcheck import __version__
 from ragcheck.corpus.models import Document
 from ragcheck.dataset.models import DIFFICULTIES, EvalItem
 from ragcheck.matching.spans import Span, locate, overlaps
-from ragcheck.metrics.core import QueryJudgment, hit_rate_at_k, mrr, ndcg_at_k, recall_at_k
+from ragcheck.metrics.core import (
+    QueryJudgment,
+    hit_rate_at_k,
+    mrr,
+    ndcg_at_k,
+    recall_at_k,
+    recall_value,
+)
 from ragcheck.retrievers.base import RetrievedChunk, Retriever
 
 
@@ -103,6 +110,100 @@ def evaluate(
         by_difficulty=by_difficulty,
         per_item=per_item,
     )
+
+
+@dataclass(frozen=True)
+class GoldSpan:
+    """A gold answer span with the source text it points at."""
+
+    doc_id: str
+    start: int
+    end: int
+    text: str
+
+
+@dataclass(frozen=True)
+class RetrievedHit:
+    """One retrieved chunk and which gold spans (by index) it overlapped."""
+
+    rank: int
+    text: str
+    covered: tuple[int, ...]
+    doc_id: str | None = None
+    start: int | None = None
+    end: int | None = None
+
+
+@dataclass(frozen=True)
+class FailureCase:
+    """A single query's outcome: its gold spans and what the retriever returned."""
+
+    qid: str
+    query: str
+    difficulty: str
+    recall: float
+    first_hit_rank: int | None
+    gold: tuple[GoldSpan, ...]
+    hits: tuple[RetrievedHit, ...]
+
+
+def explain_failures(
+    items: Sequence[EvalItem],
+    retriever: Retriever,
+    documents: Sequence[Document],
+    *,
+    k: int = 5,
+    limit: int = 5,
+) -> list[FailureCase]:
+    """Return the *limit* worst-performing queries, worst first.
+
+    Ordering: recall@k ascending, then by how late the first relevant chunk
+    appears (never is worst), then by difficulty (hard is worst). Each case keeps
+    the gold spans and the retrieved chunks so a caller can show exactly what the
+    retriever returned instead of the answer.
+    """
+    if limit < 1:
+        raise ValueError(f"limit must be >= 1, got {limit}")
+    texts = {doc.doc_id: doc.text for doc in documents}
+    cases: list[FailureCase] = []
+    for item in items:
+        retrieved = retriever.retrieve(item.query, k)[:k]
+        covered = tuple(_covered_gold(chunk, item.answers, texts) for chunk in retrieved)
+        judgment = QueryJudgment(n_gold=len(item.answers), covered=covered)
+        first_hit_rank = next((rank for rank, c in enumerate(covered, start=1) if c), None)
+        gold = tuple(
+            GoldSpan(s.doc_id, s.start, s.end, texts.get(s.doc_id, "")[s.start : s.end])
+            for s in item.answers
+        )
+        hits = tuple(
+            RetrievedHit(
+                rank=rank,
+                text=chunk.text,
+                covered=tuple(sorted(c)),
+                doc_id=chunk.doc_id,
+                start=chunk.start,
+                end=chunk.end,
+            )
+            for rank, (chunk, c) in enumerate(zip(retrieved, covered, strict=True), start=1)
+        )
+        cases.append(
+            FailureCase(
+                qid=item.qid,
+                query=item.query,
+                difficulty=item.difficulty,
+                recall=recall_value(judgment, k),
+                first_hit_rank=first_hit_rank,
+                gold=gold,
+                hits=hits,
+            )
+        )
+
+    def badness(case: FailureCase) -> tuple[float, int, int, str]:
+        penalty = case.first_hit_rank if case.first_hit_rank is not None else (k + 1)
+        return (case.recall, -penalty, -DIFFICULTIES.index(case.difficulty), case.qid)
+
+    cases.sort(key=badness)
+    return cases[:limit]
 
 
 def save_results(result: RunResult, out_path: Path) -> None:

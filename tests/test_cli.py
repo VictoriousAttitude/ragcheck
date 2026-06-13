@@ -109,6 +109,21 @@ def test_gate_exits_nonzero_on_regression(workspace: dict[str, Path]) -> None:
     assert "GATE FAILED" in outcome.output
 
 
+def test_explain_lists_worst_queries(workspace: dict[str, Path]) -> None:
+    invoke("ingest", str(workspace["docs"]), "-o", str(workspace["corpus"]))
+    invoke("generate", str(workspace["corpus"]), "-o", str(workspace["evalset"]))
+    out = invoke(
+        "explain",
+        str(workspace["evalset"]),
+        "--corpus",
+        str(workspace["corpus"]),
+        "--worst",
+        "3",
+    )
+    assert "queries by recall@5" in out
+    assert "query  " in out and "gold   " in out
+
+
 def test_compare_ranks_configs(workspace: dict[str, Path]) -> None:
     invoke("ingest", str(workspace["docs"]), "-o", str(workspace["corpus"]))
     invoke("generate", str(workspace["corpus"]), "-o", str(workspace["evalset"]))
