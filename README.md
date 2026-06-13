@@ -4,7 +4,7 @@
 [![ci](https://github.com/VictoriousAttitude/ragcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/VictoriousAttitude/ragcheck/actions/workflows/ci.yml)
 [![dogfood](https://github.com/VictoriousAttitude/ragcheck/actions/workflows/dogfood.yml/badge.svg)](https://github.com/VictoriousAttitude/ragcheck/actions/workflows/dogfood.yml)
 
-> pytest for retrieval — measure your RAG search quality, gate it in CI, ship with confidence.
+> pytest for retrieval — measure your RAG search quality.
 
 Most RAG failures are retrieval failures: the wrong text gets fetched and the model
 confidently answers from it. Teams ship this step with zero measurement. ragcheck turns
