@@ -23,8 +23,10 @@ jobs:
       - name: Evaluate retrieval
         run: >
           ragcheck run evalset.jsonl --corpus corpus.jsonl
-          --max-chars 400 --overlap-chars 60 --no-per-item -o results.json
+          --max-chars 400 --overlap-chars 60 -o results.json
       - name: Show diff against baseline
         run: ragcheck diff examples/baseline.json results.json
       - name: Gate on regression
-        run: ragcheck gate results.json --baseline examples/baseline.json --max-drop 0.02
+        run: >
+          ragcheck gate results.json --baseline examples/baseline.json
+          --max-drop 0.02 --confidence 0.95

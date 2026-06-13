@@ -32,6 +32,11 @@ ragcheck run evalset.jsonl --corpus corpus.jsonl -o results.json
 ragcheck gate results.json --baseline baseline.json --max-drop 0.05  # exit 1 on regression
 ```
 
+The gate is noise-aware: because both runs answer the same queries, it bootstraps the
+per-query differences and fails only when it is confident (default 95%) that the drop is
+real and beyond `--max-drop`, not a fluke of a small evalset. Tune with `--confidence` and
+`--resamples`, or `--no-bootstrap` to compare raw point estimates.
+
 ## Find the best configuration
 
 `run` scores one setup; `compare` sweeps a grid of retrievers and chunking
@@ -92,8 +97,10 @@ located inside the source documents automatically (whitespace- and case-tolerant
    the query appears verbatim in the answer. Metrics are reported per tier.
 4. **Run** — retrieved chunks are judged by span overlap; deterministic metrics:
    hit\_rate@k, recall@k, MRR, nDCG. No LLM judge anywhere in the core.
-5. **Gate** — compare against a committed baseline in CI and fail the build when any
-   watched metric drops beyond tolerance.
+5. **Gate** — compare against a committed baseline in CI. When per-query data is present
+   the gate runs a *seeded paired bootstrap* and fails only when a watched metric's whole
+   confidence interval falls below tolerance, so query-sampling noise on a small evalset
+   never trips the build; without it, it falls back to comparing point estimates.
 
 ## CI integration
 

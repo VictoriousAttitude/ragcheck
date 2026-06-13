@@ -47,5 +47,576 @@
       "mrr": 1.0
     }
   },
-  "per_item": []
+  "per_item": [
+    {
+      "qid": "07f01346c44c",
+      "query": "What should I know about Rollbacks?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "08a1645053a7",
+      "query": "What should I know about Authentication?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "18504e23f94a",
+      "query": "What should I know about Gateway?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        []
+      ]
+    },
+    {
+      "qid": "1ef0e05e87ee",
+      "query": "What should I know about Permissions?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "203acc8e8537",
+      "query": "What should I know about Refunds?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "213af35273fa",
+      "query": "What is The scheduler?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "21d0dc8e14b2",
+      "query": "What are Refund requests?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "28444e221d23",
+      "query": "What should I know about Invoices?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "2e962e0205cd",
+      "query": "What should I know about Plans?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "35242ab60a02",
+      "query": "What should I know about Acme platform architecture?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "3622afc3271b",
+      "query": "What should I know about Workers?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        []
+      ]
+    },
+    {
+      "qid": "3dfcaf330bad",
+      "query": "What is The starter plan?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "4bebc1a70a9a",
+      "query": "What should I know about Service accounts?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "4d0ec230161b",
+      "query": "What is Usage?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "4d5cba14bdb6",
+      "query": "What should I know about Billing?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "581e765948ba",
+      "query": "What should I know about Deployment runbook?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "75b71695f8a5",
+      "query": "What are Workers?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "7ab8c990fa7c",
+      "query": "What are Signed tokens?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "7ffcced527f8",
+      "query": "What should I know about Tokens?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "84ff1f4d96ac",
+      "query": "What should I know about Rollout stages?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "926ff9b2f3a6",
+      "query": "What is A postmortem?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "959998e39f36",
+      "query": "What is Access control?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "a7866ffa1cfb",
+      "query": "What should I know about Scheduler?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "a79e1ff71c4c",
+      "query": "What is A service account?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "b3a54a2f7701",
+      "query": "What is The gateway?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "b87e7bfdd828",
+      "query": "What are Incidents?",
+      "difficulty": "easy",
+      "n_gold": 1,
+      "relevant": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "covered": [
+        [],
+        [
+          0
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "c1f9742bdb36",
+      "query": "What should I know about Severity levels?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "c58eb840b492",
+      "query": "What should I know about Incident response?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        false,
+        false
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [],
+        []
+      ]
+    },
+    {
+      "qid": "e3aed8db674f",
+      "query": "What should I know about Freeze windows?",
+      "difficulty": "medium",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "fa1a849b5e1c",
+      "query": "What should I know about Escalation?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true,
+        true
+      ],
+      "covered": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "qid": "ff087adad0b8",
+      "query": "What should I know about Postmortems?",
+      "difficulty": "hard",
+      "n_gold": 1,
+      "relevant": [
+        true
+      ],
+      "covered": [
+        [
+          0
+        ]
+      ]
+    }
+  ]
 }

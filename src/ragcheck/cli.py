@@ -17,7 +17,13 @@ from ragcheck.corpus import load_corpus, read_corpus, save_corpus
 from ragcheck.corpus.models import Document
 from ragcheck.dataset import generate_evalset, read_evalset, save_evalset
 from ragcheck.dataset.leakage import DEFAULT_MAX_LEAKAGE
-from ragcheck.gate import DEFAULT_MAX_DROP, check_gate
+from ragcheck.gate import (
+    DEFAULT_CONFIDENCE,
+    DEFAULT_MAX_DROP,
+    DEFAULT_RESAMPLES,
+    DEFAULT_SEED,
+    check_gate,
+)
 from ragcheck.report import (
     ComparisonRow,
     headline_badge,
@@ -223,14 +229,39 @@ def diff(baseline: Path, current: Path) -> None:
 @click.option("--baseline", type=click.Path(exists=True, path_type=Path), required=True)
 @click.option("--max-drop", type=float, default=DEFAULT_MAX_DROP, show_default=True)
 @click.option("--metric", "metrics", multiple=True, help="Watch only these metrics.")
-def gate(results: Path, baseline: Path, max_drop: float, metrics: tuple[str, ...]) -> None:
+@click.option("--confidence", type=float, default=DEFAULT_CONFIDENCE, show_default=True)
+@click.option("--resamples", type=int, default=DEFAULT_RESAMPLES, show_default=True)
+@click.option("--seed", type=int, default=DEFAULT_SEED, show_default=True)
+@click.option(
+    "--bootstrap/--no-bootstrap",
+    default=True,
+    show_default=True,
+    help="Use confidence intervals when per-query data is present.",
+)
+def gate(
+    results: Path,
+    baseline: Path,
+    max_drop: float,
+    metrics: tuple[str, ...],
+    confidence: float,
+    resamples: int,
+    seed: int,
+    bootstrap: bool,
+) -> None:
     """Fail (exit 1) when RESULTS regress beyond --max-drop against --baseline."""
-    outcome = check_gate(
-        read_results(baseline),
-        read_results(results),
-        max_drop=max_drop,
-        metrics=list(metrics) or None,
-    )
+    try:
+        outcome = check_gate(
+            read_results(baseline),
+            read_results(results),
+            max_drop=max_drop,
+            metrics=list(metrics) or None,
+            confidence=confidence,
+            resamples=resamples,
+            seed=seed,
+            bootstrap=bootstrap,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     click.echo(outcome.render(), nl=False)
     if not outcome.passed:
         sys.exit(1)

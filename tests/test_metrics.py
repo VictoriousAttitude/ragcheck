@@ -3,6 +3,13 @@
 import pytest
 
 from ragcheck.metrics import QueryJudgment, hit_rate_at_k, mrr, ndcg_at_k, recall_at_k
+from ragcheck.metrics.core import (
+    hit_rate_value,
+    mrr_value,
+    ndcg_value,
+    per_query_resolver,
+    recall_value,
+)
 
 # Two gold spans; results at ranks 1 and 3 are relevant.
 J_TWO_GOLD = QueryJudgment(n_gold=2, covered=(frozenset({0}), frozenset(), frozenset({1})))
@@ -67,3 +74,37 @@ def test_empty_inputs_and_bad_k() -> None:
     assert ndcg_at_k([], 5) == 0.0
     with pytest.raises(ValueError):
         hit_rate_at_k([J_MISS], 0)
+
+
+def test_aggregate_is_mean_of_per_query_values() -> None:
+    judgments = [J_TWO_GOLD, J_RANK2, J_MISS]
+    assert recall_at_k(judgments, 3) == pytest.approx(
+        sum(recall_value(j, 3) for j in judgments) / len(judgments)
+    )
+    assert ndcg_at_k(judgments, 3) == pytest.approx(
+        sum(ndcg_value(j, 3) for j in judgments) / len(judgments)
+    )
+    assert hit_rate_at_k(judgments, 3) == pytest.approx(
+        sum(hit_rate_value(j, 3) for j in judgments) / len(judgments)
+    )
+    assert mrr(judgments, 3) == pytest.approx(
+        sum(mrr_value(j, 3) for j in judgments) / len(judgments)
+    )
+
+
+def test_resolver_dispatches_by_name_and_cutoff() -> None:
+    assert per_query_resolver("recall@2", 5)(J_TWO_GOLD) == recall_value(J_TWO_GOLD, 2)
+    assert per_query_resolver("ndcg@3", 5)(J_TWO_GOLD) == ndcg_value(J_TWO_GOLD, 3)
+    assert per_query_resolver("hit_rate@1", 5)(J_RANK2) == hit_rate_value(J_RANK2, 1)
+
+
+def test_resolver_uses_default_k_for_mrr() -> None:
+    assert per_query_resolver("mrr", 1)(J_RANK2) == mrr_value(J_RANK2, 1)
+    assert per_query_resolver("mrr", 5)(J_RANK2) == mrr_value(J_RANK2, 5)
+
+
+def test_resolver_rejects_unknown_names() -> None:
+    with pytest.raises(ValueError):
+        per_query_resolver("recall", 5)
+    with pytest.raises(ValueError):
+        per_query_resolver("f1@5", 5)

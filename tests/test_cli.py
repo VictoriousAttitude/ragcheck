@@ -94,6 +94,9 @@ def test_gate_exits_nonzero_on_regression(workspace: dict[str, Path]) -> None:
     )
     degraded = json.loads(workspace["results"].read_text(encoding="utf-8"))
     degraded["summary"] = {name: 0.0 for name in degraded["summary"]}
+    for item in degraded["per_item"]:
+        item["covered"] = [[] for _ in item["covered"]]
+        item["relevant"] = [False for _ in item["relevant"]]
     current = workspace["tmp"] / "degraded.json"
     current.write_text(json.dumps(degraded), encoding="utf-8")
 
