@@ -106,6 +106,51 @@ def test_gate_exits_nonzero_on_regression(workspace: dict[str, Path]) -> None:
     assert "GATE FAILED" in outcome.output
 
 
+def test_compare_ranks_configs(workspace: dict[str, Path]) -> None:
+    invoke("ingest", str(workspace["docs"]), "-o", str(workspace["corpus"]))
+    invoke("generate", str(workspace["corpus"]), "-o", str(workspace["evalset"]))
+    record_path = workspace["tmp"] / "compare.json"
+    out = invoke(
+        "compare",
+        str(workspace["evalset"]),
+        "--corpus",
+        str(workspace["corpus"]),
+        "--max-chars",
+        "200",
+        "--max-chars",
+        "800",
+        "-o",
+        str(record_path),
+    )
+    assert "# ragcheck comparison" in out
+    assert "★" in out
+
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    assert record["sort_metric"] == "ndcg@5"
+    assert len(record["rows"]) == 2
+    sort_values = [row["summary"]["ndcg@5"] for row in record["rows"]]
+    assert sort_values == sorted(sort_values, reverse=True)
+
+
+def test_compare_rejects_unknown_sort_metric(workspace: dict[str, Path]) -> None:
+    invoke("ingest", str(workspace["docs"]), "-o", str(workspace["corpus"]))
+    invoke("generate", str(workspace["corpus"]), "-o", str(workspace["evalset"]))
+    runner = CliRunner()
+    outcome = runner.invoke(
+        main,
+        [
+            "compare",
+            str(workspace["evalset"]),
+            "--corpus",
+            str(workspace["corpus"]),
+            "--sort",
+            "f1@5",
+        ],
+    )
+    assert outcome.exit_code != 0
+    assert "unknown metric" in outcome.output
+
+
 def test_custom_adapter(workspace: dict[str, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     (workspace["tmp"] / "myadapter.py").write_text(ADAPTER_MODULE, encoding="utf-8")
     monkeypatch.syspath_prepend(str(workspace["tmp"]))

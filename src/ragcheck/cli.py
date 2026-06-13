@@ -1,9 +1,10 @@
-"""Command-line interface: ingest, generate, run, report, diff, gate."""
+"""Command-line interface: ingest, generate, run, compare, report, diff, gate."""
 
 from __future__ import annotations
 
 import dataclasses
 import importlib
+import json
 import sys
 from collections import Counter
 from collections.abc import Sequence
@@ -17,7 +18,14 @@ from ragcheck.corpus.models import Document
 from ragcheck.dataset import generate_evalset, read_evalset, save_evalset
 from ragcheck.dataset.leakage import DEFAULT_MAX_LEAKAGE
 from ragcheck.gate import DEFAULT_MAX_DROP, check_gate
-from ragcheck.report import headline_badge, render_diff, render_markdown
+from ragcheck.report import (
+    ComparisonRow,
+    headline_badge,
+    rank_comparison,
+    render_comparison,
+    render_diff,
+    render_markdown,
+)
 from ragcheck.retrievers import BM25Retriever, DenseRetriever, Retriever
 from ragcheck.runner import evaluate, read_results, save_results
 
@@ -81,18 +89,12 @@ def run(
     """Evaluate a retriever against EVALSET and write results."""
     documents = read_corpus(corpus)
     items = read_evalset(evalset)
-    retriever: Retriever
     if adapter is not None:
         retriever, name = _load_adapter(adapter, documents)
-    elif retriever_name == "dense":
-        try:
-            retriever = DenseRetriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
-        except RuntimeError as exc:
-            raise click.ClickException(str(exc)) from exc
-        name = f"dense(max_chars={max_chars},overlap_chars={overlap_chars})"
     else:
-        retriever = BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
-        name = f"bm25(max_chars={max_chars},overlap_chars={overlap_chars})"
+        retriever, name = _build_reference_retriever(
+            retriever_name, documents, max_chars, overlap_chars
+        )
     result = evaluate(items, retriever, documents, k=k, retriever_name=name)
     if not per_item:
         result = dataclasses.replace(result, per_item=[])
@@ -101,6 +103,91 @@ def run(
     for metric, value in result.summary.items():
         click.echo(f"{metric}: {value:.3f}")
     click.echo(f"wrote {output}")
+
+
+@main.command()
+@click.argument("evalset", type=click.Path(exists=True, path_type=Path))
+@click.option("--corpus", type=click.Path(exists=True, path_type=Path), required=True)
+@click.option(
+    "--retriever",
+    "retriever_names",
+    multiple=True,
+    type=click.Choice(["bm25", "dense"]),
+    default=("bm25",),
+    show_default=True,
+)
+@click.option("-k", type=int, default=5, show_default=True)
+@click.option(
+    "--max-chars",
+    "max_chars_values",
+    multiple=True,
+    type=int,
+    default=(300, 800),
+    show_default=True,
+    help="Chunk sizes to sweep.",
+)
+@click.option(
+    "--overlap-chars",
+    "overlap_values",
+    multiple=True,
+    type=int,
+    default=(100,),
+    show_default=True,
+    help="Chunk overlaps to sweep.",
+)
+@click.option("--sort", "sort_metric", default=None, help="Metric to rank by (default ndcg@k).")
+@click.option("-o", "--output", type=click.Path(path_type=Path), default=None)
+def compare(
+    evalset: Path,
+    corpus: Path,
+    retriever_names: tuple[str, ...],
+    k: int,
+    max_chars_values: tuple[int, ...],
+    overlap_values: tuple[int, ...],
+    sort_metric: str | None,
+    output: Path | None,
+) -> None:
+    """Sweep retriever and chunking configs over EVALSET and rank them."""
+    documents = read_corpus(corpus)
+    items = read_evalset(evalset)
+    sort_metric = sort_metric or f"ndcg@{k}"
+
+    rows: list[ComparisonRow] = []
+    fingerprint = ""
+    for retriever_name in retriever_names:
+        for max_chars in max_chars_values:
+            for overlap_chars in overlap_values:
+                retriever, label = _build_reference_retriever(
+                    retriever_name, documents, max_chars, overlap_chars
+                )
+                click.echo(f"running {label} ...", err=True)
+                result = evaluate(items, retriever, documents, k=k, retriever_name=label)
+                fingerprint = result.config["evalset_fingerprint"]
+                rows.append(
+                    ComparisonRow(
+                        retriever=retriever_name,
+                        max_chars=max_chars,
+                        overlap_chars=overlap_chars,
+                        summary=result.summary,
+                    )
+                )
+
+    try:
+        ranked = rank_comparison(rows, sort_metric)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if output is not None:
+        _ensure_parent(output)
+        record = {
+            "sort_metric": sort_metric,
+            "k": k,
+            "evalset_fingerprint": fingerprint,
+            "rows": [dataclasses.asdict(row) for row in ranked],
+        }
+        output.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        click.echo(f"wrote {output}", err=True)
+    click.echo(render_comparison(ranked, sort_metric), nl=False)
 
 
 @main.command()
@@ -151,6 +238,22 @@ def gate(results: Path, baseline: Path, max_drop: float, metrics: tuple[str, ...
 
 def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _build_reference_retriever(
+    name: str, documents: Sequence[Document], max_chars: int, overlap_chars: int
+) -> tuple[Retriever, str]:
+    """Construct a built-in retriever and the label recorded in results."""
+    if name == "dense":
+        try:
+            retriever: Retriever = DenseRetriever(
+                documents, max_chars=max_chars, overlap_chars=overlap_chars
+            )
+        except RuntimeError as exc:
+            raise click.ClickException(str(exc)) from exc
+        return retriever, f"dense(max_chars={max_chars},overlap_chars={overlap_chars})"
+    retriever = BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
+    return retriever, f"bm25(max_chars={max_chars},overlap_chars={overlap_chars})"
 
 
 def _load_adapter(spec: str, documents: Sequence[Document]) -> tuple[Retriever, str]:

@@ -32,6 +32,30 @@ ragcheck run evalset.jsonl --corpus corpus.jsonl -o results.json
 ragcheck gate results.json --baseline baseline.json --max-drop 0.05  # exit 1 on regression
 ```
 
+## Find the best configuration
+
+`run` scores one setup; `compare` sweeps a grid of retrievers and chunking
+parameters over the same evalset and ranks them, so "setup A vs B" becomes a
+single command instead of bookkeeping result files by hand:
+
+```bash
+ragcheck compare evalset.jsonl --corpus corpus.jsonl \
+  --retriever bm25 --max-chars 300 --max-chars 800 --overlap-chars 50 --overlap-chars 150
+```
+
+```
+# ragcheck comparison
+
+Ranked by `ndcg@5`. Best: `bm25` max_chars=800 overlap=50 (ndcg@5=0.629).
+
+| retriever | max_chars | overlap | hit_rate@5 | recall@5 | ndcg@5 | mrr |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ★ bm25 | 800 | 50 | ...
+```
+
+Rank by any metric with `--sort recall@5`, and add `-o compare.json` for a
+committable record. Progress prints to stderr, so the table pipes cleanly.
+
 ## Test your own RAG stack
 
 ragcheck evaluates *any* retriever through a five-line adapter. Point `--adapter` at an

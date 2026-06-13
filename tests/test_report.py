@@ -1,4 +1,13 @@
-from ragcheck.report import headline_badge, render_diff, render_markdown
+import pytest
+
+from ragcheck.report import (
+    ComparisonRow,
+    headline_badge,
+    rank_comparison,
+    render_comparison,
+    render_diff,
+    render_markdown,
+)
 from ragcheck.report.badge import GREEN, RED, YELLOW
 from ragcheck.report.diff import diff_results
 from ragcheck.runner import RunResult
@@ -54,3 +63,33 @@ def test_diff_entries_and_regression_marker() -> None:
 def test_diff_warns_on_different_evalsets() -> None:
     text = render_diff(make_result(0.8, "aaa"), make_result(0.8, "bbb"))
     assert "WARNING" in text
+
+
+def comparison_rows() -> list[ComparisonRow]:
+    return [
+        ComparisonRow("bm25", 300, 100, {"recall@5": 0.70, "ndcg@5": 0.60, "mrr": 0.55}),
+        ComparisonRow("bm25", 800, 100, {"recall@5": 0.74, "ndcg@5": 0.63, "mrr": 0.60}),
+        ComparisonRow("dense", 300, 100, {"recall@5": 0.74, "ndcg@5": 0.58, "mrr": 0.52}),
+    ]
+
+
+def test_rank_orders_by_metric_descending() -> None:
+    ranked = rank_comparison(comparison_rows(), "ndcg@5")
+    assert [(r.retriever, r.max_chars) for r in ranked][0] == ("bm25", 800)
+
+
+def test_rank_breaks_ties_deterministically() -> None:
+    ranked = rank_comparison(comparison_rows(), "recall@5")
+    assert [(r.retriever, r.max_chars) for r in ranked[:2]] == [("bm25", 800), ("dense", 300)]
+
+
+def test_rank_rejects_unknown_metric() -> None:
+    with pytest.raises(ValueError, match="unknown metric"):
+        rank_comparison(comparison_rows(), "f1@5")
+
+
+def test_render_comparison_marks_winner() -> None:
+    text = render_comparison(comparison_rows(), "ndcg@5")
+    assert "★ bm25" in text
+    assert "Best: `bm25` max_chars=800" in text
+    assert text.count("★") == 1
