@@ -58,3 +58,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not dense'"
+markers = [
+    "dense: requires the optional [dense] extra (sentence-transformers); run with -m dense",
+]

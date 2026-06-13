@@ -17,6 +17,7 @@ on every push and fails the build if retrieval quality regresses.
 
 ```bash
 pip install ragcheck   # not yet on PyPI; for now: pip install git+https://github.com/VictoriousAttitude/ragcheck
+# optional dense/hybrid/rerank retrievers: pip install "ragcheck[dense]"
 
 ragcheck ingest ./docs -o corpus.jsonl                  # load your documentation
 ragcheck generate corpus.jsonl -o evalset.jsonl         # build a leakage-filtered evalset
@@ -60,6 +61,14 @@ Ranked by `ndcg@5`. Best: `bm25` max_chars=800 overlap=50 (ndcg@5=0.629).
 
 Rank by any metric with `--sort recall@5`, and add `-o compare.json` for a
 committable record. Progress prints to stderr, so the table pipes cleanly.
+
+`--retriever` sweeps strategies too, not just chunk sizes: `bm25` (lexical,
+zero-dependency default), `dense` (embedding cosine similarity), `hybrid`
+(reciprocal-rank fusion of bm25 + dense), and `rerank` (a cross-encoder
+re-scoring bm25's top candidates). The last three need the optional encoder
+models — `pip install ragcheck[dense]` — and are deliberately kept out of the
+core so the default install stays pure-Python and the base metrics stay exactly
+reproducible.
 
 ## Test your own RAG stack
 

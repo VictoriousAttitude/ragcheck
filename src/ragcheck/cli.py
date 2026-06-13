@@ -32,7 +32,13 @@ from ragcheck.report import (
     render_diff,
     render_markdown,
 )
-from ragcheck.retrievers import BM25Retriever, DenseRetriever, Retriever
+from ragcheck.retrievers import (
+    BM25Retriever,
+    DenseRetriever,
+    HybridRetriever,
+    RerankRetriever,
+    Retriever,
+)
 from ragcheck.runner import evaluate, read_results, save_results
 
 
@@ -74,7 +80,12 @@ def generate(corpus: Path, output: Path, max_leakage: float) -> None:
 @main.command()
 @click.argument("evalset", type=click.Path(exists=True, path_type=Path))
 @click.option("--corpus", type=click.Path(exists=True, path_type=Path), required=True)
-@click.option("--retriever", "retriever_name", type=click.Choice(["bm25", "dense"]), default="bm25")
+@click.option(
+    "--retriever",
+    "retriever_name",
+    type=click.Choice(["bm25", "dense", "hybrid", "rerank"]),
+    default="bm25",
+)
 @click.option("--adapter", default=None, help="Custom retriever as 'module.path:attribute'.")
 @click.option("-k", type=int, default=5, show_default=True)
 @click.option("--max-chars", type=int, default=800, show_default=True, help="bm25 chunk size.")
@@ -118,7 +129,7 @@ def run(
     "--retriever",
     "retriever_names",
     multiple=True,
-    type=click.Choice(["bm25", "dense"]),
+    type=click.Choice(["bm25", "dense", "hybrid", "rerank"]),
     default=("bm25",),
     show_default=True,
 )
@@ -274,17 +285,36 @@ def _ensure_parent(path: Path) -> None:
 def _build_reference_retriever(
     name: str, documents: Sequence[Document], max_chars: int, overlap_chars: int
 ) -> tuple[Retriever, str]:
-    """Construct a built-in retriever and the label recorded in results."""
-    if name == "dense":
-        try:
-            retriever: Retriever = DenseRetriever(
+    """Construct a built-in retriever and the label recorded in results.
+
+    ``dense``, ``hybrid`` and ``rerank`` need the optional ``[dense]`` extra; a
+    missing install surfaces as an actionable command error rather than a stack
+    trace.
+    """
+    label = f"{name}(max_chars={max_chars},overlap_chars={overlap_chars})"
+    try:
+        if name == "bm25":
+            retriever: Retriever = BM25Retriever(
                 documents, max_chars=max_chars, overlap_chars=overlap_chars
             )
-        except RuntimeError as exc:
-            raise click.ClickException(str(exc)) from exc
-        return retriever, f"dense(max_chars={max_chars},overlap_chars={overlap_chars})"
-    retriever = BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
-    return retriever, f"bm25(max_chars={max_chars},overlap_chars={overlap_chars})"
+        elif name == "dense":
+            retriever = DenseRetriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
+        elif name == "hybrid":
+            retriever = HybridRetriever(
+                [
+                    BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars),
+                    DenseRetriever(documents, max_chars=max_chars, overlap_chars=overlap_chars),
+                ]
+            )
+        elif name == "rerank":
+            retriever = RerankRetriever(
+                BM25Retriever(documents, max_chars=max_chars, overlap_chars=overlap_chars)
+            )
+        else:  # pragma: no cover - click.Choice guards the allowed names
+            raise click.ClickException(f"unknown retriever {name!r}")
+    except RuntimeError as exc:
+        raise click.ClickException(str(exc)) from exc
+    return retriever, label
 
 
 def _load_adapter(spec: str, documents: Sequence[Document]) -> tuple[Retriever, str]:
