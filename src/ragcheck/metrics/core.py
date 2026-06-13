@@ -115,6 +115,7 @@ def per_query_resolver(name: str, default_k: int) -> Callable[[QueryJudgment], f
     run's k); cutoff metrics carry their k in the name.
     """
     if name == "mrr":
+
         def mrr_fn(judgment: QueryJudgment) -> float:
             return mrr_value(judgment, default_k)
 

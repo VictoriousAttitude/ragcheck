@@ -32,9 +32,7 @@ def run_with_hits(hits: list[bool], *, fingerprint: str = "abc") -> RunResult:
                 "covered": covered,
             }
         )
-        judgments.append(
-            QueryJudgment(n_gold=1, covered=tuple(frozenset(c) for c in covered))
-        )
+        judgments.append(QueryJudgment(n_gold=1, covered=tuple(frozenset(c) for c in covered)))
     return RunResult(
         config={"k": 5, "evalset_fingerprint": fingerprint, "retriever": "x", "n_items": len(hits)},
         summary={"recall@5": recall_at_k(judgments, 5), "mrr": mrr_metric(judgments, 5)},

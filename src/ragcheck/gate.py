@@ -89,9 +89,7 @@ def _watched_entries(
     return [e for e in entries if e.metric in watched]
 
 
-def _point_estimate_gate(
-    entries: Sequence[DiffEntry], max_drop: float, note: str
-) -> GateOutcome:
+def _point_estimate_gate(entries: Sequence[DiffEntry], max_drop: float, note: str) -> GateOutcome:
     lines = [note]
     passed = True
     for entry in entries:
