@@ -111,16 +111,24 @@ retriever, k=10:
 | nfcorpus | 3633 | 323 | 800 | 0.656 | 0.138 | 0.259 | 0.470 |
 | fiqa | 57600 | 648 | 300 | 0.384 | 0.228 | 0.180 | 0.235 |
 | fiqa | 57600 | 648 | 800 | 0.429 | 0.262 | 0.210 | 0.268 |
+| arguana | 8674 | 1401 | 300 | 0.484 | 0.484 | 0.171 | 0.080 |
+| arguana | 8674 | 1401 | 800 | 0.693 | 0.693 | 0.293 | 0.171 |
+| scidocs | 25657 | 1000 | 300 | 0.438 | 0.132 | 0.129 | 0.242 |
+| scidocs | 25657 | 1000 | 800 | 0.464 | 0.149 | 0.141 | 0.253 |
 
 Chunk size alone moves nDCG@10 by 3–4 points on the same corpus and retriever — exactly
 the kind of difference these evals exist to catch. (NFCorpus recall@10 is structurally
-low: its queries average dozens of relevant documents, more than fit in the top 10.)
-Reproduce with [`benchmarks/beir_runner.py`](benchmarks/beir_runner.py).
+low: its queries average dozens of relevant documents, more than fit in the top 10.
+ArguAna has exactly one relevant document per query, so its recall@10 equals hit_rate@10;
+its low nDCG/MRR show BM25 finding the counter-argument but ranking it poorly — the
+ranking-vs-recall split these metrics exist to separate.) Reproduce with
+[`benchmarks/beir_runner.py`](benchmarks/beir_runner.py).
 
 ## Status
 
-Early development: CLI shape is settling. Next: PDF loading, an optional LLM-assisted
-question generator, more BEIR datasets, and a PyPI release.
+Early development: CLI shape is settling. The harness is now validated across five BEIR
+datasets (scifact, nfcorpus, fiqa, arguana, scidocs). Next: PDF loading, an optional
+LLM-assisted question generator, and a PyPI release.
 
 ## License
 
